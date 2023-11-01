@@ -1,5 +1,8 @@
 #include "vex.h"
 
+double getArmEnc() { return Arm1.position(rotationUnits::raw); }
+void resetArmEnc() { Arm1.setPosition(0, rotationUnits::raw); }
+
 ///////////////////////////
 //   TELE-OP FUNCTIONS   //
 ///////////////////////////
@@ -22,10 +25,10 @@ if(Controller1.ButtonA.pressing()){ //toggle Flywheel
     }
 
     if(isFly){
-      if(Controller1.ButtonUp.pressing() && flySpeed < 100){ // increase Flywheel speed by 10 pct
+      if(Controller1.ButtonUp.pressing() && flySpeed < 80){ // increase Flywheel speed by 10 pct
         flySpeed += 10;
       }
-      else if(Controller1.ButtonDown.pressing() && flySpeed > 0){ // decrease Flywheel speed by 10 pct
+      else if(Controller1.ButtonDown.pressing() && flySpeed > 50){ // decrease Flywheel speed by 10 pct
         flySpeed -= 10;
       }
       FlyWheel.spin(forward, flySpeed, pct);
@@ -97,10 +100,10 @@ void toggleRatchet(){
 //////////////
 
 void moveArm(){
-  if(Controller1.ButtonL1.pressing()){
+  if(Controller1.ButtonL1.pressing() && getArmEnc() < 180){
     Arm1.spin(forward);
     Arm2.spin(forward);
-  } else if (Controller1.ButtonL2.pressing()){
+  } else if (Controller1.ButtonL2.pressing() && getArmEnc() > 0){
     Arm1.spin(reverse);
     Arm2.spin(reverse);
   }else{
@@ -110,11 +113,8 @@ void moveArm(){
 }
 
 //////////////////////
-//   MEASUREMENTS   //
+//   MEASUREMENTS   /////////////////////////////////////////////////////////////////////
 //////////////////////
-
-double getArmEnc() { return Arm1.position(rotationUnits::raw); }
-void resetArmEnc() { Arm1.setPosition(0, rotationUnits::raw); }
 
 void stats(){
   Controller1.Screen.clearLine();
@@ -127,7 +127,7 @@ void stats(){
 }
 
 //////////////////////////////
-//   AUTONOMOUS FUNCTIONS   //
+//   AUTONOMOUS FUNCTIONS   ///////////////////////////////////////////////////////////
 //////////////////////////////
 
 void setArm(double kp, double setpoint){
@@ -148,6 +148,8 @@ void setArm(double kp, double setpoint){
       Arm2.spin(forward, speed, pct);
     }
   }
+  Arm1.stop();
+  Arm2.stop();
 }
 
 void autoFling(double speed ,double tim3){
@@ -156,6 +158,13 @@ void autoFling(double speed ,double tim3){
   Controller1.rumble(".--");
   wait(3, sec);
   FlyWheel.stop();
+}
+
+void driveForTime(double botSpeed, double tim3){  
+  Drivetrain.setDriveVelocity(botSpeed, pct);  
+  Drivetrain.drive(forward);  
+  wait(tim3,sec);  
+  Drivetrain.stop();
 }
 
 void intakingForward(double botSpeed, double dist){
@@ -173,3 +182,7 @@ void intakingForTime(double botSpeed, double point){
   Intake.stop();
   Drivetrain.stop();
 }
+
+/////////////////////
+//   AUTO SKILLS   //
+/////////////////////
